@@ -1,0 +1,93 @@
+---
+title: "SF Vignette"
+output: html_notebook
+---
+Glen Pridham 2023 Rutengroup
+
+Tutorial on using sf.R. SF: stochastic finite model. 
+
+Purpose: what is the central fitting function and how do we use it?
+
+What is NOT covered:
+-how to reshape data 
+-how to impute missing values
+See the advanced fitsf vignette for the above.
+
+# Fitting data - the FitSF function
+
+```{r}
+outputDir = "/home/glen/analysis/biological_age"
+```
+
+We start with some data. Our algorithm is designed to handle longitudinal data with regular sampling. Such data is efficiently stored in 3d arrays.
+
+The simplest form for us to begin with is thus 3d arrays. 
+
+```{r}
+y  = readRDS(sprintf("%s/data/test_y_array.rds",gOutputDir))
+x  = readRDS(sprintf("%s/data/test_x_array.rds",gOutputDir))
+#dt = readRDS(sprintf("%s/data/test_dt.csv",gOutputDir)) #we can load or make our own dt
+dt = x[,"age",-1] - x[,"age",-dim(x)[3]]
+print(dim(x))
+print(dim(y))
+```
+
+```{r}
+print("Predictors / longitudinal variables:")
+print(colnames(y))
+print("covariates (can be time-varying or not):")
+print(colnames(x))
+```
+
+To fit we use the master function FitSF
+```{r}
+sf = FitSF(y=y,x=x,dt=dt)
+```
+
+The primary parameters of the model are an interaction network and equilibrium positions for each variable.
+```{r}
+print("Network:")
+print(round(sf$W,3))
+```
+
+```{r}
+print("Equilibrium positions:")
+print(round(sf$lambda[,"mu0"],3))
+```
+
+Equilibrium positions can depend on covariates
+```{r}
+print("Equilibrium position covariates:")
+print(round(sf$lambda[,-1],3))
+```
+For example, y01 has a large, negative sex effect. This means that if sex = 1 (female) then the equilibrium position value will be lower than sex = 0 (male).
+
+As an example, we plot the mean along with the equilibrium positions (lines).
+
+```{r}
+sex0 = x[,"sex",1] == 0
+plot(apply(x[sex0,"age",],2,mean),apply(y[sex0,1,],2,mean),xlab="Age",ylab=colnames(y)[1],ylim=c(-1.5,1.5))
+points(apply(x[!sex0,"age",],2,mean),apply(y[!sex0,1,],2,mean),xlab="Age",ylab=colnames(y)[1],pch=2,col=2)
+curve(sf$lambda[1,"mu0"]+sf$lambda[1,"age"]*x,add=T,col=1)
+curve(sf$lambda[1,"mu0"]+sf$lambda[1,"age"]*x+sf$lambda[1,"sex"],add=T,col=2,lty=2)
+legend("topright",c("Male","Female"),col=1:2,lty=1:2,pch=1:2)
+```
+
+There are several ways to visualize the resulting network. Probably the simplest way is as a matrix of weights.
+
+```{r}
+library(lattice)
+levelplot(sf$W,xlab="To",ylab="From")
+```
+
+We generally don't want to keep all of the links. FitSF by default includes error estimates assuming asymptotic normality, we can use this to drop non-significant links. The asymptotic errors generally unreliable and bootstrap should be used for robust results. For our purposes they suffice to give an idea of which links are least likely.
+
+Typically we'd pick the 95% confidence interval, but since the error estimates are very small we instead demand 99.9% CI.
+
+```{r}
+library(lattice)
+network = sf$W
+#network[abs(sf$W) < qnorm(.975)*sf$dW] = NA #95% confidence
+network[abs(sf$W) < qnorm(.9995)*sf$dW] = NA #99.9% CI
+levelplot(network,xlab="To",ylab="From")
+```

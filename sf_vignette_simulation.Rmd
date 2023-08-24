@@ -1,0 +1,212 @@
+---
+title: "SF Vignette - simulation"
+output: html_notebook
+---
+Glen Pridham 2023 Rutengroup
+
+Tutorial on using sf.R. SF: stochastic finite model. 
+
+Purpose: demonstrate how to simulate data, including simple interventions.
+
+```{r}
+outputDir = "/home/glen/analysis/biological_age"
+```
+
+The essential elements for simulation are:
+1. A network of interactions, W.
+2. Covariates:
+  a. a 3d array of covariate measurements over time and,
+  b. an associated matrix of covariate parameters, lambda.
+3. An offset, mu0. (note: this can be included in 2 by making a constant covariate that is always 1.)
+4. A noise covariance term, noiseCov, which determines the stochastic events.
+5. A set of initial values, y0.
+6. A set of timesteps. Note: this must be harmonized with age, if age is included as a covariate.
+7. Basic parameters: N, how many individuals, times: how many times.
+8 (optional) an intervention that will add/subtract values at index interventionTime
+
+# Default sim
+Let's start with the default parameters.
+```{r}
+set.seed(1234) #for reproducibility
+sim = Sim.SF()
+```
+
+Sim.SF uses a number of parameters, which will be described below. For now, let's concern ourselves with y since this is the simulated set of variables.
+
+```{r}
+print(names(sim))
+str(sim$y)
+```
+As you can see y is a 3d array of individuals x variables x times. Let's look at the mean over time for variable 1...
+
+```{r}
+par(mfrow=c(3,4)) #for multiple plots on same canvas
+for (i in 1:ncol(sim$y)) plot(apply(sim$y[,i,],2,mean),ylab=colnames(sim$y)[i])
+```
+It's easier to see interactions on the same plot. Let's pick some large interactions, which can be found by looking at W,
+```{r}
+#interactions go as y_n+1 = Wy_n, hence W[i,j] is a directed arrow from y_j to y_i
+#interactions which are in the top 95%
+print(which(abs(sim$W)>=quantile(abs(sim$W),probs=.95),arr.ind=T))
+
+#for example y1 -> y4 is quite large and negative
+print(sim$W[4,1])
+plot(apply(sim$y[,1,],2,mean),ylab="y")
+points(apply(sim$y[,4,],2,mean),col=2,pch=2) #should go in the opposite direction of y1
+legend("topleft",c("y1","y4"),col=1:2,pch=1:2)
+```
+Observe that y1 is continually increasing whereas y1 starts by increasing but quickly starts to decrease, ostensibly due to y1. We cannot be certain, however, since W has many interactions which govern the behaviour of the ys. Only if we look at the eigenvectors can we be certain of behaviour.
+
+
+
+# Our own simulation
+
+Now let's make our own simulation: a 2D simulation of 100 individuals over 20 timepoints.
+```{r}
+set.seed(1234) #for reproducibility
+
+N = 100 #number of individuals
+p = 2 #number of variables
+times = 10 #number of times
+W = matrix(0,nrow=p,ncol=p) #interaction network
+diag(W) = -.25 #diagonal is usually negative (recovery)
+W[1,2] = .5 #add an interaction between the variables of the form 2->1
+mu0 = c(0,1) #offsets / equilibrium positions (length(p))
+
+#now we determine covariates
+#let's keep it simple and have a time-invariant binary variable e.g. sex
+#we start with a 3d array of dimensions N x 1 x times
+x = array(NA,dim=c(N,1,times))
+x[,,1] = sample(c(0,1),N,T)
+for (k in 2:dim(x)[3]) x[,,k]=x[,,1]
+#now we need to determine the strength of the interaction
+#let's make the first dimension independent of sex and the second dependent
+lambda = matrix(NA,nrow=p,ncol=1)
+lambda[1,1] = 0
+lambda[2,1] = 1
+
+#we need to decide on noise
+#let's make it non-mixing and standard
+noiseCov = diag(1,p,p)
+
+#next we need a starting point
+#let's draw y0 from a multivariate normal distribution
+  #(Sim.SF will do this by default, scaling up the variance by a parameter)
+y0 = mvrnorm(N,mu=rep(0,p),Sigma = diag(1,p,p))
+
+#finally, we need to decide on the timesteps
+#this is a matrix of size N x times - 1
+#it represents the time from 1 to 2, 2 to 3, ... , times-1 to times
+#for simplicity make it uniform
+dt = matrix(1,nrow=N,ncol=times-1)
+
+sim = Sim.SF(N=N,W=W,time=times,mu0=mu0,lambda=lambda,x=x,y0=y0,dt=dt,noiseCov = noiseCov)
+```
+
+We start at 0, on average, so the values should drift towards mu0,
+```{r}
+mu0
+```
+this means y1 shouldn't be moving on its own whereas y2 will be drifting up.
+
+y2 may affect y1 via W, however. Observe that
+
+```{r}
+W
+```
+hence y2 will strongly push y1 due to W[1,2] = 0.5. The direction depends on where y2 is relative to mu, since y1 = W(y2-mu). Since y2 is starting below mu this means that y1 is going to be pushed down to compensate for y1 moving up. Hence we should see y1 increase and y2 decrease. 
+
+```{r}
+plot(apply(sim$y[,1,],2,mean),ylab="y",ylim=c(-2,2))
+points(apply(sim$y[,2,],2,mean),col=2,pch=2)
+legend("topleft",c("y1","y2"),col=1:2,pch=1:2)
+```
+
+Eventually, however, y1 and y2 need to reach a steady state which will require y1 to get closer to mu (to move up). This will require a longer simulation to see.
+
+A simple question is how well do we recover our initial parameter values from the fitting algorithm?
+We have several choices of fitting algorithms, let's start with the simplest which interatively fits to the moments (based on the maximum likelihood). (we won't worry about the noise for now)
+```{r}
+fit = FitSF(y=sim$y,x=sim$x,dt=sim$dt,FitFun=FitMoments.SF)
+```
+
+```{r}
+print("Simulated W:")
+print(W)
+print("Fitted W:")
+print(round(fit$W,3))
+```
+The values of W are close but not exact.
+
+What about mu0 and lambda? The fitter merges these together into a single lambda using a standard regression trick.
+```{r}
+print("Simulated mu0:")
+print(mu0)
+print("Fitted mu0:")
+print(round(fit$lambda[,"mu0"],3))
+
+print("Simulated lambda:")
+print(lambda)
+print("Fitted lambda:")
+print(round(fit$lambda[,2],3))
+```
+
+Again, not great but close.
+
+Another option is to use least-squares. This only works if W is invertible, however, which is required to get lambda. If W isn't invertible you'll fail to get lambda but W will be fine.
+
+```{r}
+print("W is clearly invertible, |W| != 0")
+print(det(W))
+```
+
+```{r}
+fit = FitSF(y=sim$y,x=sim$x,dt=sim$dt,FitFun=FitLM.SF)
+```
+
+LM gets the same results...
+
+```{r}
+print("Simulated W:")
+print(W)
+print("Fitted W:")
+print(round(fit$W,3))
+
+print("Simulated mu0:")
+print(mu0)
+print("Fitted mu0:")
+print(round(fit$lambda[,"mu0"],3))
+
+print("Simulated lambda:")
+print(lambda)
+print("Fitted lambda:")
+print(round(fit$lambda[,2],3))
+```
+
+Again, not great but close. In the supplemental of Pridham and Rutenberg 2023 you can see the behaviour of FitMoments.SF as we vary the number of data points.
+
+Finally, a poorly validated late addition is a direct optimization of the log likelihood. This is done using FitOP.SF. FitOP.SF needs an intial parameter estimate, which by default is "lm". Suppose we instead want to start with a relatively poor starting point, say lambda=0, this can be achieved by setting initializeWith="0"
+```{r}
+fit = FitSF(y=sim$y,x=sim$x,dt=sim$dt,FitFun=FitOP.SF,fitOptions = list(initializeWith="0"))
+```
+
+LM gets the same results...
+
+```{r}
+print("Simulated W:")
+print(W)
+print("Fitted W:")
+print(round(fit$W,3))
+
+print("Simulated mu0:")
+print(mu0)
+print("Fitted mu0:")
+print(round(fit$lambda[,"mu0"],3))
+
+print("Simulated lambda:")
+print(lambda)
+print("Fitted lambda:")
+print(round(fit$lambda[,2],3))
+```
+
+Again, we get the same results!

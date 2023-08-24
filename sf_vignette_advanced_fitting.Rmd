@@ -1,0 +1,231 @@
+---
+title: "SF Vignette"
+output: html_notebook
+---
+Glen Pridham 2023 Rutengroup
+
+Tutorial on using sf.R. SF: stochastic finite model. 
+
+Purpose: demonstrate a simple analysis pipeline.
+
+```{r}
+outputDir = "/home/glen/analysis/biological_age"
+```
+
+We start with some data. Data typically: (1) are stored in matrices (e.g. long format), and (2) have missing values / censorship.
+
+We start with a long format matrix (i.e. each row is a particular individual measured at a particular age).
+
+# Load data
+
+```{r}
+long  = read.csv(sprintf("%s/data/test_censored_data_long.csv",gOutputDir))
+```
+
+The data are complete but there are deaths such that not each individual has the same number of timepoints.
+```{r}
+head(long)
+```
+
+It is instructive to include missing entries. Here we generate missingness completely at random in the predictor variables, y01-y05. We randomly drop 25% of values.
+
+```{r}
+longMiss = long
+vars = sprintf("y%02d",1:5)
+for (j in 1:length(vars)) longMiss[sample(1:nrow(longMiss),nrow(longMiss)%/%4),vars[j]] = NA
+print(sprintf("Number of NAs before: %d (%.0f%%)",sum(is.na(long[,vars])),100*mean(is.na(long[,vars]))))
+print(sprintf("Number of NAs after: %d (%.0f%%)",sum(is.na(longMiss[,vars])),100*mean(is.na(longMiss[,vars]))))
+```
+
+# Reshape data
+The model is designed to handle regularly sampled data and hence is programmed to take 3d arrays as input (individual x variable x time). 
+
+Our model takes as input:
+-the longitudinal predictors to be fitting, y (3d array)
+-covariates, x (3d array)
+-time step size from t_n to t_n+1, dt (2d matrix) - if unknown defaults to dt=1
+-(optionally) survival information to avoid imputing dead individuals (if desired)
+
+We can reshape the long-format dataframe using Reshape.
+
+We will also generate survival information.
+
+```{r}
+#this will run but obscures details
+#re = Reshape(data=longMiss,
+#             ycols=sprintf("y%02d",1:5), #these are the primary variables we want to build a network for
+#             xcols=c("age","sex") #these are the covariates which could affect equilibrium positions
+#             )
+
+#includes everything under the hood
+re = Reshape(data=longMiss,
+             ycols=sprintf("y%02d",1:5), #these are the primary variables we want to build a network for
+             xcols=c("age","sex"), #these are the covariates which could affect equilibrium positions
+             idCol="id", #this is the name of the column with a unique patient identifier
+             ageCol="age", #age column - used for dt
+             doSurv=T, #specify that you want to also make a survival object (using Surv)
+             startCol="baseline_age", #age of entry into study - used for survival
+             stopCol="death_age", #age of exit from study - used for survival
+             statusCol="status", #reason for exiting study (0: censored, 1: died)
+             stationary=c("sex") #variables in x that will not change during the course of the study
+             )
+```
+
+Aside: by default preprocess=T and Reshape will include both y, a 3d array of predictors to fit with, and ypp, a preprocessed version of y. The preprocessed version centers by the baseline sex-specific mean and scales by the pooled standard deviation. The effects of age are then to change values away from mean 0, unit variance.
+```{r}
+print(names(re))
+```
+
+Reshape produces all of the input needed to fit a model. The data are stored in arrays and, in the case of s, a Surv type object (which behaves mostly like a matrix).
+```{r}
+print(names(re))
+for (i in 1:length(re)) print(dim(re[[i]]))
+```
+Notice that y is of dimensions 1000 x 5 x 20, that is: 1000 individuals, 5 variables and 20 timepoints. What about individuals whom were measured less than 20 times? New, empty, entries are instantiated for those individuals using a piecewise linear model.
+
+For example, consider id = 3. They died at age 77.9 and hence were not measured past age 76.
+```{r}
+print(subset(longMiss,id==3))
+```
+New ages are introduced for when id = 3 WOULD have been measured
+```{r}
+print(re[["x"]][3,"age",])
+```
+
+Any stationary variables were carried forward e.g. sex,
+```{r}
+print(re[["x"]][3,"sex",])
+```
+
+But there are no values for any of the key predictor variables past the last measurement date,
+```{r}
+print(re[["y"]][3,1,])
+```
+Recall that we added random missingness as well, hence some intermediate measurements are also missing.
+
+When we fit the model we will have the option (default) of imputing all of these missing values.
+
+# Fitting a basic model
+If we use the default settings, we can quickly fit a model.
+```{r}
+sf = FitSF(y=re[["y"]],x=re[["x"]],dt=re[["dt"]])
+```
+We now have a set of parameters including an interaction network and equilibrium positions.
+
+We may want to specify some additional constraints, for example perhaps we don't want to impute the censored and dead individuals. 
+
+There are two imputation rounds:
+(1) an initial imputation (imputeFirst) that uses a basic algorithm to impute as many values as possible, and
+(2) an iterative imputation at each iteration (imputeMean) that imputes the model mean.
+
+NOTE: you do not have to impute, the estimators will work even if some data are missing.
+```{r}
+#more revealing
+sf = FitSF(y=re[["y"]], #main variables
+           x=re[["x"]], #covariates
+           dt=re[["dt"]], #step size
+           s=re[["s"]], #survival, used for imputation constraints
+           age = re[["x"]][,"age",], #used for imputation contraints
+           imputeFirst=T, #do you want to impute once before doing any preprocessing?
+           imputeFirstFunOptions = list(method="carryback"), #initial imputation will carry forward previous values then carry back future  values to replace any still missing
+           imputeMean=T, #iteratively impute the model mean
+           imputeDead=F, #do you want to impute individuals after they've died? #we have found this can reduce bias, but it can also increase bias if you have many timepoints
+           imputeCensored=F, #same with previous
+           fixedQ = NA #noise parameter #set to NA to fit iteratively
+           )
+```
+
+
+The primary parameters of the model are an interaction network and equilibrium positions for each variable.
+```{r}
+print("Network:")
+print(round(sf$W,3))
+```
+
+```{r}
+print("Equilibrium positions:")
+print(round(sf$lambda[,"mu0"],3))
+```
+
+Equilibrium positions can depend on covariates
+```{r}
+print("Equilibrium position covariates:")
+print(round(sf$lambda[,-1],3))
+```
+
+Finally, we have our estimate for the noise. Q is the inverse covariance at each timepoint,
+```{r}
+print("Q, inverse covariance:")
+print(round(sf$Q,3))
+```
+
+Note that Q will be biased if you have imputed values.
+
+Speaking of imputed values, they are stored in yimp. Observe the impute values compared to the observed for an individual,
+```{r}
+plot(re[["x"]][1,"age",],re[["y"]][1,1,],xlab="Age",ylab=colnames(re[["y"]])[1])
+points(sf[["x"]][1,"age",],sf[["yimp"]][1,1,],pch=3,col=3)
+legend("topleft",c("Observed","Observed & Imputed"),col=c(1,3),pch=c(1,3))
+```
+The imputed values are the model mean for that individual and depend on the previous timepoint as well as any variables measured at the current timepoint.
+
+
+# Bootstrapping - to get error estimates
+BootSF simply calls FitSF repeatedly. The parameters from each iteration are then pooled as the mean with error estimated by the standard deviation. You can optionally also use quantiles (but it is slow).
+
+BootSF will also perform out-of-sample error estimates useful for model selection. Note that typically the test error is biased high and the train error is biased low, so the 632 error is a good tradeoff: 632 error = 0.368 x train error + 0.632 x test error.
+
+All options must be supplied as a list, named options.
+
+BootSF can use multiple cores for parallel computing with the parallel package.
+
+Repeating the previous fit with bootstrap is achieved as follows:
+```{r}
+options = list(imputeFirst=T, #do you want to impute once before doing any preprocessing?
+           imputeFirstFunOptions = list(method="carryback"), #initial imputation will carry forward previous values then carry back future  values to replace any still missing
+           imputeMean=T, #iteratively impute the model mean
+           imputeDead=F, #do you want to impute individuals after they've died? #we have found this can reduce bias, but it can also increase bias if you have many timepoints
+           imputeCensored=F, #same with previous
+           fixedQ = NA #noise parameter #set to NA to fit iteratively
+           )
+
+sfbs = BootSF(y=re[["y"]], #main variables
+           x=re[["x"]], #covariates
+           dt=re[["dt"]], #step size
+           s=re[["s"]], #survival, used for imputation constraints
+           age = re[["x"]][,"age",], #used for imputation contraints
+           options=options,
+           mc.cores=1, #number of cores to use: more = faster = more memory usage
+           nboot=10, #number of bootstrap iterations
+           quantiles=NULL, #for robust pooling of bootstraps
+           keepImp=T #this will keep the imputed values, giving us a distribution of values for each imputation
+           )
+```
+
+The mean/sd are stored in meansd, which provides lists. The first entry is the mean and the second is the standard deviation (= standard error estimate).
+
+For example, the network is
+```{r}
+print("Network:")
+print(round(sfbs[["meansd"]][["W"]][[1]],3))
+```
+
+With error estimates
+```{r}
+print("Network errors:")
+print(round(sfbs[["meansd"]][["W"]][[2]],3))
+```
+
+For keepImp = T the imputed values are stored. This provides a distribution of values for each imputation.
+
+The errorbars are quite small, so I'll scale them up to confidence intervals.
+```{r}
+#errorScale = 1 #68.2% CI (standard error)
+errorScale = qnorm(.975) #95% CI
+#errorScale = qnorm(.9995) #99.9% CI
+
+plot(re[["x"]][1,"age",],re[["y"]][1,1,],xlab="Age",ylab=colnames(re[["y"]])[1])
+#points(sfbs[["xgt"]][1,"age",],sfbs[["yimp"]][1,1,],pch=3,col=3)
+arrows(sfbs[["xgt"]][1,"age",], sfbs[["yimp"]][1,1,]-errorScale*sfbs[["yimpsd"]][1,1,], sfbs[["xgt"]][1,"age",], sfbs[["yimp"]][1,1,]+errorScale*sfbs[["yimpsd"]][1,1,], length=0, angle=90,code=3,col=3) #add errorbars
+legend("topleft",c("Observed","Observed & Imputed"),col=c(1,3),pch=c(1,3))
+```
