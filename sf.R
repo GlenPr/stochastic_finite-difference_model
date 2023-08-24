@@ -862,7 +862,7 @@ BootSF = function(y, #data... 3d array individuals x var x times
                         "AymErrorMoments.SF","FitMoments.SF",
                         "FitW.SF","FitLambda.SF","FitLambdaEq.SF","FitQ.SF",
                         "loglik.SF","imputePredict",
-                        "prcomp2","cov2","R2","R2bs",
+                        "prcomp2","cov2","R2bs",
                         "keepImp"
     ), envir=environment())
     
