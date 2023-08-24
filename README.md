@@ -8,7 +8,11 @@ Download the folder. You can open sf.R in R and start fitting data now. I recomm
 The SF model uses longitudinal data to estimate an interaction network and equilibrium (steady-state) behaviour. It is a linear approximation of a more generate stochastic (Wiener) process model.
 
 # **Requirements**
-Written for R version 4.1.1. Required packages: MASS and survival. 
+Written for R version 4.1.1. 
+
+Required packages: MASS and survival. 
+
+Optional packages: parallel and nloptr.
 
 # **How to use**
 See vignettes for functionality. Vignettes are written as Rstudio notebooks (version 2023-03-00) (.Rmd). 
