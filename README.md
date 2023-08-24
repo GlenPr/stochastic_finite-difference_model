@@ -1,6 +1,9 @@
 # stochastic_finite_model
 R software for fitting and simulating the stochastic finite (SF) model (Pridham 2023).
 
+# **How do I use it?**\\
+Download the folder. You can open sf.R in R and start fitting data now. I recommend you read the vignettes which are written in R notebook (.Rmd) using RStudio.
+
 # **What it does**\\
 The SF model uses longitudinal data to estimate an interaction network and equilibrium (steady-state) behaviour. It is a linear approximation of a more generate stochastic (Wiener) process model.
 
