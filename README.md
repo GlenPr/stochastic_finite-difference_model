@@ -11,7 +11,9 @@ The SF model uses longitudinal data to estimate an interaction network and equil
 Written for R version 4.1.1. Required packages: MASS and survival. 
 
 # **How to use**
-See vignettes for functionality. Vignettes are written as Rstudio notebooks (version 2023-03-00) (.Rmd). The .html are included for completeness but have not been optimized (so they may be ugly or lack figures).
+See vignettes for functionality. Vignettes are written as Rstudio notebooks (version 2023-03-00) (.Rmd). 
+
+The .html are included for completeness but have not been optimized (so they may be ugly or lack figures).
 
 # **Key file**
 sf.R is main file which contains the functions needed to fit the model.
