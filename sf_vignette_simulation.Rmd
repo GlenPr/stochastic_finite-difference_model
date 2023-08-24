@@ -20,6 +20,12 @@ The essential elements for simulation are:
 7. Basic parameters: N, how many individuals, times: how many times.
 8 (optional) an intervention that will add/subtract values at index interventionTime
 
+```{r}
+#load in sf.R
+outputDir = ""  #enter the file location for sf.R
+source(sprintf("%s/sf.R",outputDir))
+```
+
 # Default sim
 Let's start with the default parameters.
 ```{r}

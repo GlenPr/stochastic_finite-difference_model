@@ -9,7 +9,8 @@ Tutorial on using sf.R. SF: stochastic finite model.
 Purpose: demonstrate a simple analysis pipeline.
 
 ```{r}
-outputDir = "" #enter the SF (github) folder directory location here
+outputDir = ""  #enter the file location for the SF (github) files here
+source(sprintf("%s/sf.R",outputDir))
 ```
 
 We start with some data. Data typically: (1) are stored in matrices (e.g. long format), and (2) have missing values / censorship.

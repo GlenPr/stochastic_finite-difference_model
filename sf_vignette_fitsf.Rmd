@@ -16,7 +16,8 @@ See the advanced fitsf vignette for the above.
 # Fitting data - the FitSF function
 
 ```{r}
-outputDir = "" #enter the SF (github) folder directory location here
+outputDir = ""  #enter the file location for the SF (github) files here
+source(sprintf("%s/sf.R",outputDir))
 ```
 
 We start with some data. Our algorithm is designed to handle longitudinal data with regular sampling. Such data is efficiently stored in 3d arrays.
