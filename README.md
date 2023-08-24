@@ -19,7 +19,7 @@ sf.R is main file which contains the functions needed to fit the model.
 # **How the math work?**
 See the supplemental of Pridham and Rutenberg (2023).
 
-# **Please cite**
+# **Cite as**
 Pridham, G. & Rutenberg, A. D. Network dynamical stability analysis of homeostasis reveals ‘mallostasis’: biological equilibria drifting towards worsening health with age. arXiv [q-bio.OT] (2023)
 
 Bibtex
