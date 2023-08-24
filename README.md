@@ -1,22 +1,22 @@
 # stochastic_finite_model
 R software for fitting and simulating the stochastic finite (SF) model (Pridham 2023).
 
-# **What it does**
+# **What it does**\\
 The SF model uses longitudinal data to estimate an interaction network and equilibrium (steady-state) behaviour. It is a linear approximation of a more generate stochastic (Wiener) process model.
 
-# **Requirements**
+# **Requirements**\\
 Written for R version 4.1.1. Required packages: MASS and survival. 
 
-# **How to use**
+# **How to use**\\
 See vignettes for functionality. Vignettes are written as Rstudio notebooks (version 2023-03-00) (.Rmd). The .html are included for completeness but have not been optimized (so they may be ugly or lack figures).
 
-# **Key file**
+# **Key file**\\
 sf.R is main file which contains the functions needed to fit the model.
 
-# **How the math work?**
+# **How the math work?**\\
 See the supplemental of Pridham and Rutenberg (2023).
 
-# **Please cite**
+# **Please cite**\\
 Pridham, G. & Rutenberg, A. D. Network dynamical stability analysis of homeostasis reveals ‘mallostasis’: biological equilibria drifting towards worsening health with age. arXiv [q-bio.OT] (2023)
 
 Bibtex
