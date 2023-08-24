@@ -10,11 +10,13 @@ You should start with sf_vignette_fitsf.Rmd. You will need to source sf.R. You'l
 The SF model uses longitudinal data to estimate an interaction network and equilibrium (steady-state) behaviour. It is a linear approximation of a more generate stochastic (Wiener) process model.
 
 # **Requirements**
-Written for R version 4.1.1. 
+Written for R version 4.1.1. RStudio is recommended for the vignettes.
 
 Required packages: MASS and survival. 
 
-Optional packages: parallel and nloptr.
+Recommended: parallel
+
+Optional: nloptr.
 
 # **How to use**
 See vignettes for functionality. Vignettes are written as Rstudio notebooks (version 2023-03-00) (.Rmd). 
