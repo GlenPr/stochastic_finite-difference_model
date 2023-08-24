@@ -16,7 +16,7 @@ See the advanced fitsf vignette for the above.
 # Fitting data - the FitSF function
 
 ```{r}
-outputDir = "/home/glen/analysis/biological_age"
+outputDir = "" #enter the SF (github) folder directory location here
 ```
 
 We start with some data. Our algorithm is designed to handle longitudinal data with regular sampling. Such data is efficiently stored in 3d arrays.
@@ -24,9 +24,9 @@ We start with some data. Our algorithm is designed to handle longitudinal data w
 The simplest form for us to begin with is thus 3d arrays. 
 
 ```{r}
-y  = readRDS(sprintf("%s/data/test_y_array.rds",gOutputDir))
-x  = readRDS(sprintf("%s/data/test_x_array.rds",gOutputDir))
-#dt = readRDS(sprintf("%s/data/test_dt.csv",gOutputDir)) #we can load or make our own dt
+y  = readRDS(sprintf("%s/test_y_array.rds",outputDir))
+x  = readRDS(sprintf("%s/test_x_array.rds",outputDir))
+#dt = readRDS(sprintf("%s/test_dt.csv",outputDir)) #we can load or make our own dt
 dt = x[,"age",-1] - x[,"age",-dim(x)[3]]
 print(dim(x))
 print(dim(y))

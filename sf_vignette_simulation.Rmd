@@ -8,10 +8,6 @@ Tutorial on using sf.R. SF: stochastic finite model.
 
 Purpose: demonstrate how to simulate data, including simple interventions.
 
-```{r}
-outputDir = "/home/glen/analysis/biological_age"
-```
-
 The essential elements for simulation are:
 1. A network of interactions, W.
 2. Covariates:

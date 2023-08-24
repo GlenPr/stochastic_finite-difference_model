@@ -9,7 +9,7 @@ Tutorial on using sf.R. SF: stochastic finite model.
 Purpose: demonstrate a simple analysis pipeline.
 
 ```{r}
-outputDir = "/home/glen/analysis/biological_age"
+outputDir = "" #enter the SF (github) folder directory location here
 ```
 
 We start with some data. Data typically: (1) are stored in matrices (e.g. long format), and (2) have missing values / censorship.
@@ -19,7 +19,7 @@ We start with a long format matrix (i.e. each row is a particular individual mea
 # Load data
 
 ```{r}
-long  = read.csv(sprintf("%s/data/test_censored_data_long.csv",gOutputDir))
+long  = read.csv(sprintf("%s/test_censored_data_long.csv",outputDir))
 ```
 
 The data are complete but there are deaths such that not each individual has the same number of timepoints.
