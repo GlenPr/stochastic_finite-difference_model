@@ -2,7 +2,7 @@
 R software for fitting and simulating the stochastic finite (SF) model (Pridham and Rutenberg 2023).
 
 # **Getting started**
-Download the latest release (tags, right hand side of screen). You can open sf.R in R and start fitting data now. I recommend you read the vignettes which are written in R notebook (.Rmd) using RStudio.
+Download the latest release (tags, right hand side of screen). You can open sf.R in R and start fitting data now. I recommend you read the vignettes which are written in R notebook (.Rmd) using RStudio. (You can read the .html instead but it is less convenient.)
 
 You should start with sf_vignette_fitsf.Rmd. You will need to source sf.R. You'll also need to enter the location of your folder, which is stored in `outputDir`.
 
