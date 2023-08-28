@@ -8,7 +8,7 @@ Tutorial on using sf.R. SF: stochastic finite model.
 
 Purpose: demonstrate how to perform eigen analysis (i.e. find the natural aging variables).
 
-Before we start, it is important to note that the natural aging variables cannot be estimated for any individual / timepoint when there is missing data (practically impossible). Hence you must impute if you want to know natural aging variable scores for people with missing data.
+Before we start, it is important to note that the natural aging variables cannot be estimated for an individual / timepoint with missing data (practically impossible). Hence you must impute if you want to know natural aging variable scores for people with missing data.
 
 The procedure goes as follows:
 1. Estimate a model. You need the network, W.
