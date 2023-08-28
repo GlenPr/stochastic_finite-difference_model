@@ -93,3 +93,4 @@ for (i in 1:ncol(y)) plot(apply(y[,i,],2,mean),ylab=colnames(y)[i])
 par(mfrow=c(2,3)) #for multiple plots on same canvas
 for (i in 1:ncol(n$z)) plot(apply(n$z[,i,],2,mean),ylab=colnames(n$z)[i])
 ```
+What do I do with the natural variables now? Whatever you want. z1 tends to be a good predictor of adverse outcome e.g. survival.

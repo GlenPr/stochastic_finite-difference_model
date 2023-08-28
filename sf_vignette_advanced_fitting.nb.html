@@ -1757,10 +1757,14 @@ display: none;
 <p>Purpose: demonstrate a simple analysis pipeline.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxub3V0cHV0RGlyID0gXCIvaG9tZS9nbGVuL0RvY3VtZW50cy9zZl9tb2RlbFwiICNlbnRlciB0aGUgU0YgKGdpdGh1YikgZm9sZGVyIGRpcmVjdG9yeSBsb2NhdGlvbiBoZXJlXG5zb3VyY2Uoc3ByaW50ZihcIiVzL3NmLlJcIixvdXRwdXREaXIpKVxuYGBgIn0= -->
-<pre class="r"><code>outputDir = &quot;/home/glen/Documents/sf_model&quot; #enter the SF (github) folder directory location here
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxub3V0cHV0RGlyID0gXCJcIiAgI2VudGVyIHRoZSBmaWxlIGxvY2F0aW9uIGZvciB0aGUgU0YgKGdpdGh1YikgZmlsZXMgaGVyZVxuc291cmNlKHNwcmludGYoXCIlcy9zZi5SXCIsb3V0cHV0RGlyKSlcbmBgYCJ9 -->
+<pre class="r"><code>outputDir = &quot;&quot;  #enter the file location for the SF (github) files here
 source(sprintf(&quot;%s/sf.R&quot;,outputDir))</code></pre>
 <!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiV2FybmluZzogY2Fubm90IG9wZW4gZmlsZSAnL3NmLlInOiBObyBzdWNoIGZpbGUgb3IgZGlyZWN0b3J5RXJyb3IgaW4gZmlsZShmaWxlbmFtZSwgXCJyXCIsIGVuY29kaW5nID0gZW5jb2RpbmcpIDogXG4gIGNhbm5vdCBvcGVuIHRoZSBjb25uZWN0aW9uXG4ifQ== -->
+<pre><code>Warning: cannot open file &#39;/sf.R&#39;: No such file or directoryError in file(filename, &quot;r&quot;, encoding = encoding) : 
+  cannot open the connection</code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <p>We start with some data. Data typically: (1) are stored in matrices

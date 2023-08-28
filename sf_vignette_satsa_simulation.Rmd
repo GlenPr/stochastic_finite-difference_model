@@ -15,7 +15,7 @@ SATSA data are longitudinal biological age measurements. See readme for referenc
 
 ```{r}
 #load in sf.R
-outputDir = "/home/glen/Documents/sf_model"  #enter the file location for sf.R
+outputDir = ""  #enter the file location for sf.R
 source(sprintf("%s/sf.R",outputDir))
 ```
 
@@ -38,13 +38,12 @@ lambda = read.csv(sprintf("%s/twins_lambda_lm_v2.csv",outputDir),row.names=1)
 Q = read.csv(sprintf("%s/twins_Q_lm_v2.csv",outputDir),row.names=1) #Q is inverse dynamical covariance ("precision matrix")
 ```
 
-we have 8 BAs
+We have 8 variables, each on is a "biological age", as can be seen by observing the network,
 
 ```{r}
 round(W,2)
 ```
-
-Starting values (ages 55-65)
+We need starting values which we'll sample from a multivariate Gaussian using the mean and covariance from SATSA for individuals between ages 55-65. We intend to simulate individuals of baseline age 60.
 ```{r}
 vars = rownames(W)
 #males
@@ -56,7 +55,7 @@ muf = read.csv(sprintf("%s/twins_female_donors_mean.csv",outputDir),row.names=1)
 sigf = read.csv(sprintf("%s/twins_female_donors_cov.csv",outputDir),row.names=1)[vars,vars] 
 ```
 
-# Now we're ready to simulate
+# Setup simulation parameters
 ```{r}
 set.seed(42) #for reproducibility
 
@@ -113,16 +112,16 @@ str(sim$y)
 ```
 As you can see y is a 3d array of individuals x variables x times. 
 
-Changing means...
+We see that the mean of each variable drifts with age.
 
 ```{r}
 par(mfrow=c(3,3)) #for multiple plots on same canvas
 for (i in 1:ncol(sim$y)) plot(apply(age,2,mean),apply(sim$y[,i,],2,mean),main=colnames(sim$y)[i],ylab="y",xlab="Age")
 ```
-Individual trajectory
+We can also look at individual trajectories, say individual 1
 
 ```{r}
-plot(age[1,],sim$y[1,"physio_age",],xlab="Age",ylab="Physiological Age (PhysioAge)",main="Individual 1",pch=16)
+plot(age[1,],sim$y[1,"physio_age",],xlab="Age",ylab="Physiological Age (PhysioAge)",main="Individual 1",pch=16,ylim=c(40,110))
 lines(age[1,],sim$y[1,"physio_age",],xlab="Age",ylab="Physiological Age (PhysioAge)",main="Individual 1")
 ```
 
@@ -138,7 +137,7 @@ Sim.SF permits impulse (delta function) interventions which instantaneously reju
 
 We already have the control data from earlier but now we need some case data. We can match case and control perfectly by setting the same seeds or we can be imprecise about case and control, instead matching by age and sex.
 ```{r}
-match=T #do you want to perfectly match case and control?
+match=T #do you want to perfectly match case and control (including stochastic events)?
 if(match) set.seed(42)
 
 #step 1. resample starting points
@@ -148,10 +147,10 @@ y0case = rbind(ymcase,yfcase)
 
 #step 2. set intervention, scale is in years
 #we need to specify when (index) and how big of an effect
-interventionTime = 10/mean(dt)+1 #we want to intervene 10 years into the simulation
+interventionTime = round(10/mean(dt))+1 #we want to intervene 10 years into the simulation
 #the intervention is a vector of values, one for each variable
-intervention = rep(0,ncol(y)) 
-names(intervention) = colnames(y)
+intervention = rep(0,ncol(y0case)) 
+names(intervention) = colnames(y0case)
 intervention[["physio_age"]] = -10 #we want to rejuvenate (make younger) PhysioAge by 10 years
 
 
@@ -202,8 +201,8 @@ y0case = rbind(ymcase,yfcase)
 #we need to specify when (index) and how big of an effect
 interventionTime = 10/mean(dt)+1 #we want to intervene 10 years into the simulation
 #the intervention is a vector of values, one for each variable
-intervention = rep(-10,ncol(y)) 
-names(intervention) = colnames(y)
+intervention = rep(-10,ncol(y0case)) 
+names(intervention) = colnames(y0case)
 #two of the variables have opposite 'risk' directions (worse health)
 intervention[["telomere"]] = 10 
 intervention[["cognition"]] = 10
