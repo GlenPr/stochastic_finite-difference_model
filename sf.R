@@ -2904,7 +2904,11 @@ Sim.SF = function(N=1000,
     }
     y[,,1] = eps*signal_to_noise_ratio
   }
-  else y[,,1] = y0
+  else 
+  {
+    colnames(y) = colnames(y0)
+    y[,,1] = y0
+  }
   
   if(interventionTime==1) for (j in 1:ncol(y)) y[,j,1] = y[,j,1] + intervention[j]
   
@@ -2938,7 +2942,7 @@ Sim.SF = function(N=1000,
     
     if(interventionTime==i) for (j in 1:ncol(y)) y[,j,i] = y[,j,i] + intervention[j]
   }
-  colnames(y)=sprintf("y%d",1:ncol(y))
+  if(is.null(colnames(y))) colnames(y)=sprintf("y%d",1:ncol(y))
   
   results = list(y=y,x=x,mu0=mu0,p=p,N=N,W=W,dt=dt,times=times,noiseCov=noiseCov,lambda=lambda,mu0i=mu0i)
   

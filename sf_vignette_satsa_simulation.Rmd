@@ -1,0 +1,224 @@
+---
+title: "SF Vignette - SATSA simulation"
+output: html_notebook
+---
+Glen Pridham 2023 Rutengroup
+
+Tutorial on using sf.R. SF: stochastic finite model. 
+
+Purpose: demonstrate how to simulate data from SATSA (Swedish Adoption/Twin Study - "twins"), including interventions.
+
+The SATSA data includes initial age and sex, which we will include. We provide data only for simulating starting from age 60.
+
+SATSA data are longitudinal biological age measurements. See readme for reference.
+
+
+```{r}
+#load in sf.R
+outputDir = "/home/glen/Documents/sf_model"  #enter the file location for sf.R
+source(sprintf("%s/sf.R",outputDir))
+```
+
+# Load parameters
+
+We need:
+1. the model parameters:
+  a) interaction network,
+  b) equilibrium positions, and
+  c) noise.
+2. realistic starting values:
+  a) mean for each sex, and
+  b) covariance for each sex.
+
+Model parameters
+
+```{r}
+W = read.csv(sprintf("%s/twins_W_lm_v2.csv",outputDir),row.names=1) #W estimated using linear model (lm) and pre-processed using PCA (v2)
+lambda = read.csv(sprintf("%s/twins_lambda_lm_v2.csv",outputDir),row.names=1)
+Q = read.csv(sprintf("%s/twins_Q_lm_v2.csv",outputDir),row.names=1) #Q is inverse dynamical covariance ("precision matrix")
+```
+
+we have 8 BAs
+
+```{r}
+round(W,2)
+```
+
+Starting values (ages 55-65)
+```{r}
+vars = rownames(W)
+#males
+mum = read.csv(sprintf("%s/twins_male_donors_mean.csv",outputDir),row.names=1)[vars,1]
+sigm = read.csv(sprintf("%s/twins_male_donors_cov.csv",outputDir),row.names=1)[vars,vars]
+
+#females
+muf = read.csv(sprintf("%s/twins_female_donors_mean.csv",outputDir),row.names=1)[vars,1] 
+sigf = read.csv(sprintf("%s/twins_female_donors_cov.csv",outputDir),row.names=1)[vars,vars] 
+```
+
+# Now we're ready to simulate
+```{r}
+set.seed(42) #for reproducibility
+
+#Step 1. How many males/females do you want?
+Nm = 500
+Nf = 500
+
+#Step 2. how many timesteps do you want to take? (can be uniform or non, will specify in step 5)
+times = 60
+
+#Step 3. sample starting points
+ym = mvrnorm(n=Nm,mu=mum,Sigma=sigm)
+yf = mvrnorm(n=Nf,mu=muf,Sigma=sigf)
+y0 = rbind(ym,yf)
+
+#Step 4. prep covariates
+#sex and intercept
+x = array(NA,c(nrow(y0),ncol(lambda),times))
+colnames(x) = colnames(lambda)
+x[,"mu0",] = 1 #intercept
+x[,"sex",] = c(rep(0,Nm),rep(1,Nf)) #0: male, 1: female
+
+
+#Step 5. pick timesteps
+dt = matrix(1,nrow=nrow(y0),ncol=times-1)
+age = array(60,c(nrow(y0),times))
+for (k in 2:dim(age)[2]) age[,k] = age[,k-1]+dt[,k-1]
+
+
+#Step 6. noise
+noiseCov = solve(Q) #stepper takes inverse of Q
+
+#Step 7. Now we're ready to simulate!
+```
+
+# Now we're ready to simulate
+
+```{r}
+sim = Sim.SF(N=Nm+Nf,x=x,lambda=lambda,W=W,times=times,dt=dt,noiseCov=noiseCov,
+            mu0=rep(0,ncol(y0)), #intercept can be specified here, but we used x[mu0] instead
+            y0 = y0
+            )
+```
+
+Sim.SF simulates multivariate trajectories for each individual in y, then returns the parameters
+
+```{r}
+print(names(sim))
+```
+
+
+```{r}
+str(sim$y)
+```
+As you can see y is a 3d array of individuals x variables x times. 
+
+Changing means...
+
+```{r}
+par(mfrow=c(3,3)) #for multiple plots on same canvas
+for (i in 1:ncol(sim$y)) plot(apply(age,2,mean),apply(sim$y[,i,],2,mean),main=colnames(sim$y)[i],ylab="y",xlab="Age")
+```
+Individual trajectory
+
+```{r}
+plot(age[1,],sim$y[1,"physio_age",],xlab="Age",ylab="Physiological Age (PhysioAge)",main="Individual 1",pch=16)
+lines(age[1,],sim$y[1,"physio_age",],xlab="Age",ylab="Physiological Age (PhysioAge)",main="Individual 1")
+```
+
+Physiological Age (PhysioAge) is a measure of health as quantified as an effective age in years (a PhysioAge of 80 implies you have the physiology of an 80 year-old). As we see, the simulation thinks it should increase roughly linearly with age starting around age 70, but with non-trivial stochasticity. 
+
+What happens if we intervene on PhysioAge?
+
+# Intervention simulation
+
+We see how the natural population behaves without intervention. What if we intervene with an anti-aging treatment that rejuvenates physiological age?
+
+Sim.SF permits impulse (delta function) interventions which instantaneously rejuvenate each individual at a specified time, applied to each specified variable.
+
+We already have the control data from earlier but now we need some case data. We can match case and control perfectly by setting the same seeds or we can be imprecise about case and control, instead matching by age and sex.
+```{r}
+match=T #do you want to perfectly match case and control?
+if(match) set.seed(42)
+
+#step 1. resample starting points
+ymcase = mvrnorm(n=Nm,mu=mum,Sigma=sigm)
+yfcase = mvrnorm(n=Nf,mu=muf,Sigma=sigf)
+y0case = rbind(ymcase,yfcase)
+
+#step 2. set intervention, scale is in years
+#we need to specify when (index) and how big of an effect
+interventionTime = 10/mean(dt)+1 #we want to intervene 10 years into the simulation
+#the intervention is a vector of values, one for each variable
+intervention = rep(0,ncol(y)) 
+names(intervention) = colnames(y)
+intervention[["physio_age"]] = -10 #we want to rejuvenate (make younger) PhysioAge by 10 years
+
+
+case = Sim.SF(N=Nm+Nf,x=x,lambda=lambda,W=W,times=times,dt=dt,noiseCov=noiseCov,
+            mu0=rep(0,ncol(y0)), #intercept can be specified here, but we used x[mu0] instead
+            y0 = y0,
+            interventionTime=interventionTime,intervention=intervention
+            )
+```
+
+So what happens to PhysioAge?
+
+```{r}
+plot(age[1,],sim$y[1,"physio_age",],xlab="Age",ylab="Physiological Age (PhysioAge)",main="Individual 1",pch=16,ylim=c(40,110))
+lines(age[1,],sim$y[1,"physio_age",],xlab="Age",ylab="Physiological Age (PhysioAge)",main="Individual 1")
+points(age[1,],case$y[1,"physio_age",],pch=17,col=2)
+lines(age[1,],case$y[1,"physio_age",],col=2,lty=2)
+legend("topleft",c("Control","Case"),col=1:2,pch=1:2+15,lty=1:2)
+```
+Case and control perfectly coincide (if match=T) or coincide in the mean (if match=F) until age 70, when we rejuvenate the case (red). The case eventually catches up by about age 120.
+
+We can subtract case from control to get an idea of the overall effect on each variable
+```{r}
+par(mfrow=c(3,3)) #for multiple plots on same canvas
+for (i in 1:ncol(sim$y)) plot(apply(age,2,mean),apply(case$y[,i,],2,mean)-apply(sim$y[,i,],2,mean),main=colnames(sim$y)[i],ylab=bquote(Delta*y),xlab="Age")
+```
+
+We see that PhysioAge improves immediately at age 70, this is because we defined the intervention as such. The other variables show delayed effects, however, and telomere actually changes directions: going down between ages 70-80 then up. This delayed an unusual behaviour is due to the network of interactions.
+
+The rejuvenation impulse perturbs PhysioAge then the network adjusts each other variable to compensate, causing information to bounce around.
+
+It may interest you to try more complex interventions, such as improving multiple variables at once.
+
+# What if we improve each variable all at once?
+
+Suppose we instead intervene simultaneously on all variables, improving them all by 10 years.
+
+```{r}
+match=T #do you want to perfectly match case and control?
+if(match) set.seed(42)
+
+#step 1. resample starting points
+ymcase = mvrnorm(n=Nm,mu=mum,Sigma=sigm)
+yfcase = mvrnorm(n=Nf,mu=muf,Sigma=sigf)
+y0case = rbind(ymcase,yfcase)
+
+#step 2. set intervention, scale is in years
+#we need to specify when (index) and how big of an effect
+interventionTime = 10/mean(dt)+1 #we want to intervene 10 years into the simulation
+#the intervention is a vector of values, one for each variable
+intervention = rep(-10,ncol(y)) 
+names(intervention) = colnames(y)
+#two of the variables have opposite 'risk' directions (worse health)
+intervention[["telomere"]] = 10 
+intervention[["cognition"]] = 10
+
+
+case = Sim.SF(N=Nm+Nf,x=x,lambda=lambda,W=W,times=times,dt=dt,noiseCov=noiseCov,
+            mu0=rep(0,ncol(y0)), #intercept can be specified here, but we used x[mu0] instead
+            y0 = y0,
+            interventionTime=interventionTime,intervention=intervention
+            )
+```
+
+```{r}
+par(mfrow=c(3,3)) #for multiple plots on same canvas
+for (i in 1:ncol(sim$y)) plot(apply(age,2,mean),apply(case$y[,i,],2,mean)-apply(sim$y[,i,],2,mean),main=colnames(sim$y)[i],ylab=bquote(Delta*y),xlab="Age")
+```
+
+Looks a little boring. This could be because we've stimulated one of the normal modes (eigenvectors / natural variables), which have simple dynamics. See the natural variables vignette for more information.

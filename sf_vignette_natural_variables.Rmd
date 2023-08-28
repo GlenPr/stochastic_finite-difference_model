@@ -1,0 +1,95 @@
+---
+title: "SF Vignette - natural variables / eigen-analysis"
+output: html_notebook
+---
+Glen Pridham 2023 Rutengroup
+
+Tutorial on using sf.R. SF: stochastic finite model. 
+
+Purpose: demonstrate how to perform eigen analysis (i.e. find the natural aging variables).
+
+Before we start, it is important to note that the natural aging variables cannot be estimated for any individual / timepoint when there is missing data (practically impossible). Hence you must impute if you want to know natural aging variable scores for people with missing data.
+
+The procedure goes as follows:
+1. Estimate a model. You need the network, W.
+2. Eigen-decompose W, eigen(W).
+3. The transformation matrix to natural variables is the inverse of the eigen-matrix, solve(eigen(W)[[2]])
+4. Transform the input data.
+5. You'll probably want to look at the eigenvalues, eigen(W)[[1]], to determine the relative stability of each natural variable. Usually the least stable (most positive) are the most important.
+
+Step 1 uses FitSF or BootSF whereas steps 2-4 are performed automatically by the function Natural.SF.
+
+We demonstrate the process using artificial test data.
+
+```{r}
+outputDir = ""  #enter the file location for the SF (github) files here
+source(sprintf("%s/sf.R",outputDir))
+```
+
+```{r}
+y  = readRDS(sprintf("%s/test_y_array.rds",outputDir))
+x  = readRDS(sprintf("%s/test_x_array.rds",outputDir))
+#dt = readRDS(sprintf("%s/test_dt.csv",outputDir)) #we can load or make our own dt
+dt = x[,"age",-1] - x[,"age",-dim(x)[3]]
+print(dim(x))
+print(dim(y))
+```
+
+To fit we use the master function FitSF
+```{r}
+sf = FitSF(y=y,x=x,dt=dt)
+```
+
+Now let's look at the natural variables. 
+
+By default we only consider the real part. The imaginary part may or may not be 0.
+```{r}
+n = Natural.SF(sf,realOnly=T)
+print(names(n))
+```
+
+We sort the natural variables by their eigenvalue strengths,
+```{r}
+plot(n$eig[[1]],ylab="eigenvalue")
+```
+
+The first eigenvalue should be the most important since it has the lowest resilience, although we typically look for 'elbows' so 1-3 could all be important.
+
+So what do the natural variables (z) look like? They look just like the input data!
+```{r}
+print("input data:")
+print(str(y)) #input data
+print("natural variables:")
+print(str(n$z)) #natural variables
+```
+
+The natural variables behave just like the original variables and can be used in place of them.
+
+Well what goes into each natural variable? Pinv transforms from y to z, hence the rows of Pinv determine what's in each z,
+```{r}
+print("z1 contents (Pinv):")
+print(n$Pinv[1,])
+print("z1 correlations:")
+rho = numeric()
+for (j in 1:ncol(y)) rho[j] = cor(c(n$z[,1,]),c(y[,j,]),use='pairwise.complete')
+print(rho)
+
+plot(n$Pinv[1,],ylab="association strength",ylim=c(-1,1))
+points(rho,col=2,pch=2)
+legend("topleft",c("Transformation","Correlation"),pch=1:2,col=1:2)
+```
+
+Observe that the correlation between z1 and each input variable is roughly equal to the transformation Pinv[1,]. z1 is simply a linear combination of the ys.
+
+# The original variables
+
+```{r}
+par(mfrow=c(2,3)) #for multiple plots on same canvas
+for (i in 1:ncol(y)) plot(apply(y[,i,],2,mean),ylab=colnames(y)[i])
+```
+# The natural variables (linear combinations of the input y)
+
+```{r}
+par(mfrow=c(2,3)) #for multiple plots on same canvas
+for (i in 1:ncol(n$z)) plot(apply(n$z[,i,],2,mean),ylab=colnames(n$z)[i])
+```
