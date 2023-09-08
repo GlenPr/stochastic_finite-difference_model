@@ -296,7 +296,7 @@ FitSF = function(y,
   W = fit[["W"]]
   lambda = fit[["lambda"]]
   Q = fit[["Q"]]
-  sigma = fit[["Q"]]
+  sigma = solve(fit[["Q"]])
   
   for (i in 1:iter)
   {
@@ -344,7 +344,7 @@ FitSF = function(y,
     W = fit[["W"]]
     lambda = fit[["lambda"]]
     Q = fit[["Q"]]
-    sigma = fit[["Q"]]
+    sigma = solve(fit[["Q"]])
   }
   
   
