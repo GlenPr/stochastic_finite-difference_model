@@ -27,7 +27,6 @@ The .html are included for completeness but have not been optimized (so they may
 sf.R is main file which contains the functions needed to fit the model.
 
 # **Tips**
-`a = b` `c`
 1. Although not the default, it is worth trying the linear regression estimator: `FitFun=FitLM.SF` e.g. `sf = FitSF(y=y,x=x,dt=dt,FitFun=FitLM.SF)`. The linear regression estimator has yet to be formally validated but likely has lower bias than the default estimator in most cases.
 2. If you have reduced rank W the model will likely fail to fit, this is due to collinearity problems. You can (a) reduce the parameters used in the fit or (b) pre-process using principal component analysis e.g. `sf = FitSF(y=y,x=x,dt=dt,Npc=ncol(y)-2)` will drop the last 2 principal components, thus reducing collinearity. You can also try fitting a diagonal model, this works pretty well if you preprocess with principal component analysis e.g. `sf = FitSF(y=y,x=x,dt=dt,Npc=ncol(y),diagonalW=T)`.
 
@@ -54,4 +53,5 @@ Bibtex
 
 # **See also**
 For more information, see:
+
 Pridham, G. & Rutenberg, A. D. Dynamical network stability analysis of multiple biological ages provides a framework for understanding the aging process. arXiv [q-bio.QM] Preprint at http://arxiv.org/abs/2309.10005 (2023)
