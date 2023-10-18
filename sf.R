@@ -1441,7 +1441,8 @@ FitLM.SF = function(y, #3d array individuals x variables x times
     diagonalW=T,
     FitFun = lm,
     error=F,
-    eps = 0 #in case solve(sigma) fails, add a small number along diagonal to get Q (i.e. if Q is giving NaNs increase this to a small number)
+    noiseMethod="y",
+    qOptions = list()
   )
   for (i in 1:length(defaults)) if(is.null(options[[names(defaults)[i]]])) options[[names(defaults)[i]]] = defaults[[i]]
 
@@ -1460,7 +1461,7 @@ FitLM.SF = function(y, #3d array individuals x variables x times
     colnames(lambda) = colnames(x)
     rownames(lambda) = colnames(W)
     dlambda = lambda
-    sigma = diag(NA,ncol(y),ncol(y))
+
     qterm = W
     dqterm = W
     weights = 1/c(abs(dt[,1:(dim(y)[3]-1)])) 
@@ -1482,7 +1483,7 @@ FitLM.SF = function(y, #3d array individuals x variables x times
       W[j,j] = C["yn"]
       lambda[j,] = -C[colnames(lambda)]/W[j,j]
       pr = predict(m,newdata=data)
-      sigma[j,j] = mean((data$dyn-pr)^2,na.rm=T) #just in case... I've heard things about residuals() or lm$res
+
       if(options[["error"]])
       {
           #validation: lambda error bars are wonky
@@ -1524,7 +1525,7 @@ FitLM.SF = function(y, #3d array individuals x variables x times
     colnames(lambda) = colnames(x)
     rownames(lambda) = colnames(W)
     dlambda = lambda
-    sigma = diag(NA,ncol(y),ncol(y))
+
     weights = 1/c(abs(dt[,1:(dim(y)[3]-1)])) #check this
     
     data = data.frame(dyn=c(y[,1,-1]-y[,1,-dim(y)[3]]))#we'll update this one as we go
@@ -1576,10 +1577,41 @@ FitLM.SF = function(y, #3d array individuals x variables x times
       }
     }
     lambda = solve(W)%*%lambda
-    sigma = cov2(res,use="pairwise.complete",center=F)
   }
 
-  Q = solve(sigma+diag(options[["eps"]],nrow=nrow(sigma),ncol=ncol(sigma)))
+  #now estimate noise
+  if(calcNoise)
+  {
+    sf = list(W=W,lambda=lambda)
+    class(sf)="SF"
+    
+    if(options[["noiseMethod"]]=="y0") #use unimputed values
+    {
+      y0 = options[["y0"]]
+      if(is.null(y0)) stop("You must provide y0 to options if you want to use noiseMethod='y0'")
+      Q = FitQ.SF(y=y0,x=x,dt=dt,sf=sf,options=options[["qOptions"]])
+      sigma = Q[["sigma"]]
+      Q = Q[["Q"]]
+    }
+    else if (any(grepl("scale",tolower(options[["noiseMethod"]])))) #scale by # of imputed values (can be biased)
+    {
+      if(is.null(y0)) stop("You must provide y0 to options if you want to use noiseMethod='scale'")
+      Q = FitQ.SF(y=y,x=x,dt=dt,sf=sf,options=options[["qOptions"]])
+      sigma = Q[["sigma"]]*sum(!is.na(y))/(sum(!is.na(y0))-1)
+      Q = Q[["Q"]]/sum(!is.na(y))*(sum(!is.na(y0))-1)
+    }
+    else if (any(grepl("y",tolower(options[["noiseMethod"]])))) #use imputed values (can be biased)
+    {
+      Q = FitQ.SF(y=y,x=x,dt=dt,sf=sf,options=options[["qOptions"]])    
+      sigma = Q[["sigma"]]
+      Q = Q[["Q"]]
+    }
+  }
+  else
+  {
+    sigma = solve(Q)
+  }
+  
   l = list(W=W,lambda=lambda,sigma=sigma,Q=Q,
            dW=dW,dlambda=dlambda)
   l[["options"]] = options
