@@ -34,22 +34,26 @@ sf.R is main file which contains the functions needed to fit the model.
 See Pridham and Rutenberg (2023).
 
 # **Cite as**
-Pridham, G. & Rutenberg, A. D. Network dynamical stability analysis of homeostasis reveals ‘mallostasis’: biological equilibria drifting towards worsening health with age. arXiv [q-bio.OT] (2023)
-
+Pridham, G. & Rutenberg, A. D. Network dynamical stability analysis reveals key ‘mallostatic’ natural variables that erode homeostasis and drive age-related decline of health. Sci. Rep. 13, 1–12 (2023). https://doi.org/10.1038/s41598-023-49129-7
 Bibtex
-@ARTICLE{Pridham2023-yt,
-  title         = "Network dynamical stability analysis of homeostasis reveals
-                   ``mallostasis'': biological equilibria drifting towards
-                   worsening health with age",
-  author        = "Pridham, Glen and Rutenberg, Andrew D",
-  month         =  jun,
-  year          =  2023,
-  url           = "http://arxiv.org/abs/2306.12448",
-  archivePrefix = "arXiv",
-  eprint        = "2306.12448",
-  primaryClass  = "q-bio.OT",
-  arxivid       = "2306.12448"
+@ARTICLE{Pridham2023-pi,
+  title     = "Network dynamical stability analysis reveals key ``mallostatic''
+               natural variables that erode homeostasis and drive age-related
+               decline of health",
+  author    = "Pridham, Glen and Rutenberg, Andrew D",
+  journal   = "Sci. Rep.",
+  publisher = "Nature Publishing Group",
+  volume    =  13,
+  number    =  1,
+  pages     = "1--12",
+  month     =  dec,
+  year      =  2023,
+  url       = "https://www.nature.com/articles/s41598-023-49129-7",
+  language  = "en",
+  issn      = "2045-2322, 2045-2322",
+  doi       = "10.1038/s41598-023-49129-7"
 }
+
 
 # **See also**
 For more information, see:
