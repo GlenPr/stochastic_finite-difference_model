@@ -35,7 +35,9 @@ See Pridham and Rutenberg (2023).
 
 # **Cite as**
 Pridham, G. & Rutenberg, A. D. Network dynamical stability analysis reveals key ‘mallostatic’ natural variables that erode homeostasis and drive age-related decline of health. Sci. Rep. 13, 1–12 (2023). https://doi.org/10.1038/s41598-023-49129-7
+
 Bibtex
+
 @ARTICLE{Pridham2023-pi,
   title     = "Network dynamical stability analysis reveals key ``mallostatic''
                natural variables that erode homeostasis and drive age-related
