@@ -6,7 +6,7 @@ title: "Network dynamical stability analysis reveals key mallostatic natural var
 authors:
 - family-names: "Pridham"
   given-names: "Glen"
-  orcid: "0000-0001-9450-0396"
+  orcid: "https://orcid.org/0000-0001-9450-0396"
 - family-names: Rutenberg"
   given-names: "Andrew D"
 journal: "Sci. Rep."
@@ -16,7 +16,7 @@ volume: "13"
 issue: "1"
 month: "12"
 year: "2023"
-url: https://www.nature.com/articles/s41598-023-49129-7
+url: "https://www.nature.com/articles/s41598-023-49129-7"
 issn: 2045-2322, 2045-2322
 doi: 10.1038/s41598-023-49129-7
 start: "1"
