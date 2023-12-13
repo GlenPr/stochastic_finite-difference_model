@@ -1,0 +1,12 @@
+cff-version: 1.0.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Pridham
+    given-names: Glen
+    orcid: 0000-0001-9450-0396
+title: "Network dynamical stability analysis reveals key 'mallostatic' natural variables that erode homeostasis and drive age-related decline of health."
+version: 0.0.0
+identifiers:
+  - type: doi
+    value: 10.1038/s41598-023-49129-7
+date-released: 2023
