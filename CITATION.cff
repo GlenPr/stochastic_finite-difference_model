@@ -12,12 +12,12 @@ authors:
 journal: "Sci. Rep."
 publisher:
   name: "Nature Publishing Group"
-volume: "13"
-issue: "1"
-month: "12"
-year: "2023"
+volume: 13
+issue: 1
+month: 12
+year: 2023
 url: "https://www.nature.com/articles/s41598-023-49129-7"
-issn: 2045-2322, 2045-2322
+issn: "2045-2322, 2045-2322"
 doi: 10.1038/s41598-023-49129-7
-start: "1"
-end: "12"
+start: 1
+end: 12
