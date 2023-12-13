@@ -1,11 +1,9 @@
-cff-version: 2.0.0
 type: article
 title: "Network dynamical stability analysis reveals key mallostatic natural variables
   that erode homeostasis and drive age-related decline of health"
 authors:
 - family-names: Pridham
   given-names: Glen
-  orcid: 0000-0001-9450-0396
 - family-names: Rutenberg
   given-names: Andrew D
 journal: Sci. Rep.
