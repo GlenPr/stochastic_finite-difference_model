@@ -22,9 +22,11 @@ sim = GenSF(N=N,x=x,lambda=lambda,W=W,mu0=mu0,times=times,dt=dt,noiseCov=sigma,y
 
 Death can then be imposed afterwards using the death parameter files:
 #from library(eha), use coef() to get the needed coefficients
--anova_optimized_phregz.rds #for death
--anova_optimized_phreg_censorz.rds #for censorship
--anova_optimized_phreg_transplantz.rds #for transplant
+#the ones with "z" at the end use the z natural variables, for which you'll have to transform your simulation into z via the eigendecomposition of W
+  #i.e. Pinv = solve(eigen(W)[[2]]) #this will transform z = y%*%t(Pinv) for matrix of individuals y into matrix of natural variables z #(you'll probably want to sort eigenvalues first)
+-anova_optimized_phreg.rds #for death
+-anova_optimized_phreg_censor.rds #for censorship
+-anova_optimized_phreg_transplant.rds #for transplant
 Simple step through each time in sim, and sample from a Weibull distribution the event time from each of these three possible events. Reject any which occur after the next timestep. Keep whichever one happens first.
 
 
