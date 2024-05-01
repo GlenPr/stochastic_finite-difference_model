@@ -3,3 +3,10 @@ Useful files from
 Systems-level characterization of health in patients
 living with end-stage kidney disease using standard
 lab values
+
+
+The beta files are the emulator for computing natural variables using a limited set of variables. The naming convention is:
+kidney_emulator_convenience_models_<natural variable to estimate>_coefficients.csv.
+
+I have also included errors for these estimators which are in files named:
+kidney_emulator_convenience_models_<natural variable to estimate>_coefficients_errors.csv.
