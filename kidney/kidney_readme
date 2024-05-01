@@ -4,7 +4,31 @@ Systems-level characterization of health in patients
 living with end-stage kidney disease using standard
 lab values
 
+# For simulations
+The simulation files are:
+-sim_y0cov.csv #covariance matrix for initial biomarker values
+-sim_x0cov.csv #covariance matrix for initial covariate values
+-sim_initial_mean.csv #provides the initial means for each biomarker and covariate
+-sim_W.csv #the W parameter matrix (network) used for simulations
+-sim_lambda.csv #the lambda parameter matrix (mu) used for simulations (excludes mu0, this is covariates only)
+-sim_mu0.csv #the mu0 parameter matrix used for simulations
+-sim_sigma.csv #the noise parameter matrix (sigma) used for simulations
 
+To use the SF model simulator you'd use:
+#sample yinit from a normal random variable
+#sample xinit from a normal random variable, then generate x by stepping it forward in time by dt = 6/52
+#then use:
+sim = GenSF(N=N,x=x,lambda=lambda,W=W,mu0=mu0,times=times,dt=dt,noiseCov=sigma,y0 = yinit)
+
+Death can then be imposed afterwards using the death parameter files:
+#from library(eha), use coef() to get the needed coefficients
+-anova_optimized_phregz.rds #for death
+-anova_optimized_phreg_censorz.rds #for censorship
+-anova_optimized_phreg_transplantz.rds #for transplant
+Simple step through each time in sim, and sample from a Weibull distribution the event time from each of these three possible events. Reject any which occur after the next timestep. Keep whichever one happens first.
+
+
+# For emulator
 The beta files are the emulator for computing natural variables using a limited set of variables. The naming convention is:
 kidney_emulator_convenience_models_<natural variable to estimate>_coefficients.csv.
 
