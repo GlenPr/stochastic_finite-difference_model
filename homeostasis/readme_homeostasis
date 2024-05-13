@@ -15,3 +15,10 @@ parameters:
 5. yinit_cov is the initial covariance for the biomarkers in W
 6. xinit_mu is the initial mean for the covariates (used in lambda)
 7. xinit_cov is the initial covariance for the covariates (used in lambda)
+
+
+The average step sizes (in appropriate units - in paper) were:
+slam_c57 (weeks?): 6.387097
+slam_het3 (weeks?): 4.943421
+paquid (years): 3.210585
+elsa (years): 3.939907
