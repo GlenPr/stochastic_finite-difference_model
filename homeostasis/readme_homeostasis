@@ -1,0 +1,15 @@
+Parameter values from homeostasis/mallostasis paper
+
+Pridham, G. & Rutenberg, A. D. Network dynamical stability analysis reveals key ‘mallostatic’ natural variables that erode homeostasis and drive age-related decline of health. Sci. Rep. 13, 1–12 (2023)
+
+4 datasets: slam_c57, slam_het3, paquid and elsa
+bs is for bootstrap
+se is for standard errors
+parameters:
+1. W is network
+2. lambda are the linear parameters for the covariates
+3. sigma is the noise matrix
+4. yinit_mu is the initial mean for the biomarkers in W
+5. yinit_cov is the initial covariance for the biomarkers in W
+6. xinit_mu is the initial mean for the covariates (used in lambda)
+7. xinit_cov is the initial covariance for the covariates (used in lambda)
