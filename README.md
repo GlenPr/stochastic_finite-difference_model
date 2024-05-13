@@ -27,7 +27,7 @@ The .html are included for completeness but have not been optimized (so they may
 sf.R is main file which contains the functions needed to fit the model.
 
 # **Tips**
-1. Although not the default, it is worth trying the linear regression estimator: `FitFun=FitLM.SF` e.g. `sf = FitSF(y=y,x=x,dt=dt,FitFun=FitLM.SF)`. The linear regression estimator has yet to be formally validated but likely has lower bias than the default estimator in most cases.
+1. Although not the default, it is worth trying the linear regression estimator: `FitFun=FitLM.SF` e.g. `sf = FitSF(y=y,x=x,dt=dt,FitFun=FitLM.SF)`. The linear regression was proven in a subsequent paper, and usually works a lot better.
 2. If you have reduced rank W the model will likely fail to fit, this is due to collinearity problems. You can (a) reduce the parameters used in the fit or (b) pre-process using principal component analysis e.g. `sf = FitSF(y=y,x=x,dt=dt,Npc=ncol(y)-2)` will drop the last 2 principal components, thus reducing collinearity. You can also try fitting a diagonal model, this works pretty well if you preprocess with principal component analysis e.g. `sf = FitSF(y=y,x=x,dt=dt,Npc=ncol(y),diagonalW=T)`.
 
 # **How does the math work?**
@@ -58,6 +58,23 @@ Bibtex
 
 
 # **See also**
-For more information, see:
+It is wise to use the least-squares estimator which is proven in this paper:
 
-Pridham, G. & Rutenberg, A. D. Dynamical network stability analysis of multiple biological ages provides a framework for understanding the aging process. arXiv [q-bio.QM] Preprint at http://arxiv.org/abs/2309.10005 (2023)
+Pridham, G. & Rutenberg, A. D. Dynamical network stability analysis of multiple biological ages provides a framework for understanding the aging process. J. Gerontol. A Biol. Sci. Med. Sci. (2024) doi:10.1093/gerona/glae021
+
+Bibtex
+
+@ARTICLE{Pridham2024-cy,
+  title    = "Dynamical network stability analysis of multiple biological ages
+              provides a framework for understanding the aging process",
+  author   = "Pridham, Glen and Rutenberg, Andrew D",
+  journal  = "J. Gerontol. A Biol. Sci. Med. Sci.",
+  month    =  jan,
+  year     =  2024,
+  url      = "http://dx.doi.org/10.1093/gerona/glae021",
+  keywords = "biological age; complexity; eigen analysis; systems biology",
+  language = "en",
+  issn     = "1079-5006, 1758-535X",
+  pmid     = "38206765",
+  doi      = "10.1093/gerona/glae021"
+}
