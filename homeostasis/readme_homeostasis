@@ -16,7 +16,7 @@ parameters:
 6. xinit_mu is the initial mean for the covariates (used in lambda)
 7. xinit_cov is the initial covariance for the covariates (used in lambda)
 
-Note: ELSA didn't have some variables at initial wave, so the 'init' values are for the LAST wave, not the first.
+Note: ELSA didn't have some variables at initial wave, so the 'init' values are for the LAST wave, not the first. (Also, SLAM is technically the 2nd wave, although this distinction shouldn't matter much)
 
 
 The average step sizes (in appropriate units - in paper) were:
