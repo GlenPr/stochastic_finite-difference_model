@@ -9,6 +9,8 @@ parameters:
 1. W is network
 2. lambda are the linear parameters for the covariates
 3. sigma is the noise matrix
+  a. default includes imputated values without correction
+  b. "scaled" are scaled by number of imputed values - not recommended that you use this (in principle it's better but values don't look right)
 4. yinit_mu is the initial mean for the biomarkers in W
 5. yinit_cov is the initial covariance for the biomarkers in W
 6. xinit_mu is the initial mean for the covariates (used in lambda)
