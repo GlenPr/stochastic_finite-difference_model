@@ -29,8 +29,30 @@ Death can then be imposed afterwards using the death parameter files:
 -anova_optimized_phreg_transplant.rds #for transplant
 Simple step through each time in sim, and sample from a Weibull distribution the event time from each of these three possible events. Reject any which occur after the next timestep. Keep whichever one happens first.
 
+# Natural variables
+The vignette (vignette_using_the_coefficients) explains how to compute the natural variables given a set of biomarkers. Ideally you'll have all 14 used in the paper, otherwise you'll need to use the emulator.
 
-# For emulator
+There are three cases for computing the natural variables:
+1. you have all 14 biomarkers,
+2. you have a subset of the 14, or
+3. you have a subset of the 6 validation set (creatinine, albumin, urea, phosphate, calcium, total_co2).
+These are delineated below and explained in the vignette.
+
+# Case 1: you have all 14 biomarkers
+You'll need the Pinv transformation matrix and the scale parameters:
+natural_variable_transformation_Pinv_real.csv
+natural_variable_transformation_Pinv_imaginary.csv
+kidney_data_mu.csv
+kidney_data_sd.csv
+
+# Case 2: you have some of the 14 biomarkers
+The coefficients (''beta'') files are saved using the convention:
+kidney_emulator_models_<natural variable to estimate>_coefficients.csv
+
+I have also included errors for these estimators which are in files named:
+kidney_emulator_models_<natural variable to estimate>_coefficients_errors.csv.
+
+# Case 3: you have some of the 6 validation set biomarkers (may be more accurate than case 2)
 The beta files are the emulator for computing natural variables using a limited set of variables. The naming convention is:
 kidney_emulator_convenience_models_<natural variable to estimate>_coefficients.csv.
 
