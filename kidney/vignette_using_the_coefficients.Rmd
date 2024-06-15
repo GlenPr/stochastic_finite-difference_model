@@ -1,0 +1,185 @@
+---
+title: "Emulating the natural variables"
+output: html_notebook
+---
+
+Glen Pridham 2024.
+
+This file describes how to convert a set of biomarkers into natural variables.
+
+
+
+The biomarkers used are:
+albumin in g/L
+calcium in mmol/L
+chloride in mmol/L
+glucose (random) in mmol/L
+hemoglobin in g/L
+magnesium in mmol/L
+phosphate in mmol/L
+platelet count in billion/L
+potassium in mmol/L
+creatinine in mumol/L (micro mols per liter)
+urea in mmol/L
+total CO2 in mmol/L
+white blood cell count in billion/L
+*Note: these are all measured BEFORE the dialysis session.
+
+There are three cases discussed here:
+1. you have all 14 biomarkers,
+2. you have a subset of the 14,
+3. you have a subset of the 6 validation set (creatinine, albumin, urea, phosphate, calcium, total_co2).
+
+
+put the location of your files here (i.e. where the coefficients are saved)
+```{r}
+fileDir = "results" # put your file directory name here e.g. C:/glen/results
+```
+
+#########################################################
+########## Case 1 - you have all 14 biomarkers ########## 
+#########################################################
+
+First you'll need to load in your data. I'll just generate some fake (unrealistic) data.
+```{r}
+vars = c("pre.creatinine", "platelets", "albumin", "pre.urea",
+          "hemoglobin", "sodium", "chloride", "wbc", "potassium", "phosphate",     
+          "glucose.r", "magnesium", "total.co2", "calcium")    
+
+data = data.frame(albumin=rnorm(100))
+for (j in 1:length(vars)) data[,vars[j]] = rnorm(100)
+print(head(data))
+```
+
+Next we must convert from the original units to the scaled units. 
+```{r}
+data_sd = read.csv(sprintf("%s/kidney_data_sd.csv",fileDir),row.names=1)  
+mu_sex  = read.csv(sprintf("%s/kidney_data_mu.csv",fileDir),row.names=1) #sex 0: male, sex 1: female
+``` 
+
+To scale we have to subtract off the sex-specific mean then divide by the sd (standard deviation).
+
+The scaling is done by sex, so we'll need to know the sex of each individual. For simplicity let's suppose the first 50 are males and the second are females
+```{r}
+males = data[1:50,]
+females = data[51:100,]
+
+for (j in 1:ncol(males))
+{
+  males[,j] = (males[,j]-mu_sex[1,colnames(males)[j]])/data_sd[colnames(males)[j],1]
+}
+
+for (j in 1:ncol(females))
+{
+  females[,j] = (females[,j]-mu_sex[2,colnames(females)[j]])/data_sd[colnames(females)[j],1]
+}
+```
+
+
+Since we have all 14 biomarkers we can use the full transformation. The real and imaginary parts are saved separately and need to be combined (and converted to a single matrix).
+```{r}
+rePinv = read.csv(sprintf("%s/natural_variable_transformation_Pinv_real.csv",fileDir),row.names=1)
+imPinv = read.csv(sprintf("%s/natural_variable_transformation_Pinv_imaginary.csv",fileDir),row.names = 1)
+Pinv = as.matrix(rePinv)+1.i*as.matrix(imPinv)
+
+print(Pinv)
+```
+Now we transform. The formal is Pinv%*%x, where x is a vector for each individual. This can be done all at once using
+```{r}
+zm = as.matrix(males[,colnames(Pinv)])%*%t(Pinv)
+zf = as.matrix(females[,colnames(Pinv)])%*%t(Pinv)
+head(zm)
+```
+Now you have all of the natural variables.
+
+You'll notice that some are complex. In fact, z02/z03 and z06/z07 are complex conjugates. This means we can alternatively deal with entirely real z using:
+```{r}
+zm[,3] = Im(zm[,2])
+zf[,3] = Im(zf[,2])
+colnames(zm)[3] = "Im(z02)"
+colnames(zf)[3] = "Im(z02)"
+zm[,7] = Im(zm[,6])
+zf[,7] = Im(zf[,6])
+colnames(zm)[7] = "Im(z06)"
+colnames(zf)[7] = "Im(z06)"
+
+zm = Re(zm)
+zf = Re(zf)
+
+print(head(zm))
+```
+
+You now have all of the natural variables used in the paper.
+
+
+#################################################################
+########## Case 2 - you have SOME of the 14 biomarkers ########## 
+#################################################################
+
+First you'll need to load in your data. I'll generate some (limited) fake data.
+```{r}
+data = data.frame(albumin=rnorm(100),pre_creatinine=rnorm(100),platelets=rnorm(100),calcium=rnorm(100))
+
+print(head(data))
+```
+
+Let's look at the emulator coefficients, for example z01
+```{r}
+
+C1 = read.csv(sprintf("%s/kidney_emulator_models_z01_coefficients.csv",fileDir))
+
+print(C1)
+```
+
+Each row is a different emulator model. The columns are sorted by the best predictors, *which differs for each z*. For the case of z01 those are creatinine then platelets then albumin ...
+
+Each model has an associated R2 (coefficient of variation) value for the strength of the approximation. Pick the best model for which you have ALL non-zero variables. We have pre_creatinine, platelets and albumin, so the best model is number 3:
+```{r}
+C1[3,]
+```
+
+Now we transform.
+```{r}
+z1 = C1[3,"X.Intercept."] + as.matrix(data[,c("pre_creatinine","platelets","albumin")])%*%t(C1[3,c("pre_creatinine","platelets","albumin")])
+head(z1)
+```
+That's it. Now you repeat for all 14 zs. Note that z3 = Im(z2) and z7 = Im(z6), as in the paper.
+
+
+###########################################################################
+########## Case 3 - you have some of the 6 validation biomarkers ########## 
+###########################################################################
+
+In some cases your biomarker set might better align with the  validation set, which are:
+creatinine, albumin, urea, phosphate, calcium, and total_co2.
+
+If this is the case, you should instead use the "convenience" model. This just repeats case 2 but using a different set of coefficients.
+
+First you'll need to load in your data. I'll generate some (limited) fake data.
+```{r}
+data = data.frame(albumin=rnorm(100),pre_creatinine=rnorm(100),pre_urea=rnorm(100))
+
+print(head(data))
+```
+
+Let's look at the emulator coefficients, for example z01
+```{r}
+
+C1 = read.csv(sprintf("%s/kidney_emulator_models_z01_coefficients.csv",fileDir))
+
+print(C1)
+```
+
+Each row is a different emulator model. The columns are sorted by the best predictors, *which differs for each z*. For the case of z01 those are creatinine then platelets then albumin ...
+
+Each model has an associated R2 (coefficient of variation) value for the strength of the approximation. Pick the best model for which you have ALL non-zero variables. We have just pre_creatinine, so the best model is number 1:
+```{r}
+C1[1,]
+```
+
+Now we transform.
+```{r}
+z1 = C1[1,"X.Intercept."] + data[,"pre_creatinine"]*C1[1,"pre_creatinine"]
+head(z1)
+```
+ Done
