@@ -31,7 +31,7 @@ sf.R is main file which contains the functions needed to fit the model.
 2. If you have reduced rank W the model will likely fail to fit, this is due to collinearity problems. You can (a) reduce the parameters used in the fit or (b) pre-process using principal component analysis e.g. `sf = FitSF(y=y,x=x,dt=dt,Npc=ncol(y)-2)` will drop the last 2 principal components, thus reducing collinearity. You can also try fitting a diagonal model, this works pretty well if you preprocess with principal component analysis e.g. `sf = FitSF(y=y,x=x,dt=dt,Npc=ncol(y),diagonalW=T)`.
 
 # **How does the math work?**
-See Pridham and Rutenberg (2023).
+See Pridham and Rutenberg (2023). The supplemental is quite detailed.
 
 # **Cite as**
 Pridham, G. & Rutenberg, A. D. Network dynamical stability analysis reveals key ‘mallostatic’ natural variables that erode homeostasis and drive age-related decline of health. Sci. Rep. 13, 1–12 (2023). https://doi.org/10.1038/s41598-023-49129-7
@@ -77,4 +77,21 @@ Bibtex
   issn     = "1079-5006, 1758-535X",
   pmid     = "38206765",
   doi      = "10.1093/gerona/glae021"
+}
+
+An application that helps explain how the model works:
+Pridham, G., Tennankore, K. K., Rockwood, K., Worthen, G. & Rutenberg, A. D. Systems-level health of patients living with end-stage kidney disease using standard lab values. arXiv [q-bio.QM] (2024)
+
+@ARTICLE{Pridham2024-ql,
+  title         = "Systems-level health of patients living with end-stage
+                   kidney disease using standard lab values",
+  author        = "Pridham, Glen and Tennankore, Karthik K and Rockwood,
+                   Kenneth and Worthen, George and Rutenberg, Andrew D",
+  month         =  may,
+  year          =  2024,
+  url           = "http://arxiv.org/abs/2405.20523",
+  archivePrefix = "arXiv",
+  eprint        = "2405.20523",
+  primaryClass  = "q-bio.QM",
+  arxivid       = "2405.20523"
 }
