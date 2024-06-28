@@ -38,7 +38,7 @@ FitSF = function(y,
                  s = NULL, #survival data, include if you want to use informative censoring
                  where = is.na(y), #where to impute (if at all)
                  Npc = NULL, #number of PCs to use for fitting; NULL to avoid PCA entirely
-                 imputeInPCSpace = F, #do you want to perform imputation in latent space? May imputed too many values
+                 imputeInPCSpace = FALSE, #do you want to perform imputation in latent space? May imputed too many values #may give warning messages if F because can't invert reduced rank (happens occasionally)
                  pcaIndex=1, #time index to use for PCA
                  center=!is.null(Npc), #pre-processing step, center by mean
                  scale=F, #pre-processing step, scale by sd
@@ -293,19 +293,22 @@ FitSF = function(y,
   
   #initial fit
   fit = FitFun(y=y,x=x,dt=dt,W=NULL,lambda=NULL,Q=Q,calcNoise=calcNoise,options=fitOptions)
+
   W = fit[["W"]]
   lambda = fit[["lambda"]]
   Q = fit[["Q"]]
   sigma = solve(fit[["Q"]])
   
+
   for (i in 1:iter)
   {
+    if(verbose) cat(".")
     if (i < 1) break #because R is a bastard
     
     #(a) impute
     if(imputeMean) 
     {
-      if(doPCA & !imputeInPCSpace)
+      if(doPCA & !imputeInPCSpace) #must be done separately in case we pick Npc < initial size
       {
         ysave = y
         #undo transformations
@@ -318,8 +321,10 @@ FitSF = function(y,
         lambdap = transinv[,1:Npc,drop=F]%*%lambda
         
         Qp = transinv[,1:Npc,drop=F]%*%Q%*%trans[1:Npc,,drop=F]
-        
-        yp = ImputeEMFun(y=yp,x=x,dt=dt,where=where,W=Wp,lambda=lambdap,Q=Qp,options=imputeEMFunOptions)[["imp"]]
+        sigmap = transinv[,1:Npc,drop=F]%*%sigma%*%trans[1:Npc,,drop=F] #added June 2024
+        #problem: this is probably not going to be invertible but ImputeMean.SF needs to invert a subset of sigmap...
+
+        yp = ImputeEMFun(y=yp,x=x,dt=dt,where=where,W=Wp,lambda=lambdap,Q=Qp,sigma0=sigmap,options=imputeEMFunOptions)[["imp"]]
         
         #impute skipped values:
         yp[is.na(yp)] = ysave[is.na(yp)]
@@ -363,7 +368,13 @@ FitSF = function(y,
     dQ = efit[["dQ"]]
     dsigma = efit[["dsigma"]]
   }
-  
+  else #update, was missing (will crash without) #added June 2024
+  {
+    dW = NA*W
+    dlambda = NA*lambda
+    dQ = NA*Q
+    dsigma = NA*sigma
+  }
   
   
   #compute determinant of sigma in latent space if reduced rank
@@ -474,6 +485,7 @@ FitSF = function(y,
   
   oneoverWz = 1/Wz #inverse if Wz is diagonal
   oneoverdWz = dWz/Wz^2
+
   
   #notes for return values:
   #y: what you provided
@@ -1248,7 +1260,10 @@ ImputeMean.SF = function(y,x,dt,
   for (i in 1:length(defaults)) if(is.null(options[[names(defaults)[i]]])) options[[names(defaults)[i]]] = defaults[[i]]
   
   if(is.null(sigma0) & is.null(Q)) stop("need sigma0 or Q")
-  else if (is.null(sigma0)) sigma0 = solve(Q)
+  else if (is.null(sigma0)) 
+  {
+    sigma0 = solve(Q)
+  }
   
   
   W0 = W #will replace W during iterations
