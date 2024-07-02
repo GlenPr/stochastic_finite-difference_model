@@ -1,0 +1,75 @@
+---
+title: "Fitting using least-squares"
+output: html_notebook
+---
+
+
+Glen Pridham 2024 Rutengroup
+
+Tutorial on using FitLM.SF. 
+
+Purpose: how do we fit using the least-squares estimator?
+
+The least-squares estimator was proven to work in a subsequent paper. It is not the default (for historical reasons) but it is recommended. While they will usually give you the same results, this is not always the case and the least-squares estimator is superior.
+
+
+# Fitting data - the FitSF function
+
+```{r}
+outputDir = ""  #enter the file location for the SF (github) files here
+source(sprintf("%s/sf.R",outputDir))
+```
+
+Read in some basic data to fit with
+
+```{r}
+y  = readRDS(sprintf("%s/test_y_array.rds",outputDir))
+x  = readRDS(sprintf("%s/test_x_array.rds",outputDir))
+#dt = readRDS(sprintf("%s/test_dt.csv",outputDir)) #we can load or make our own dt
+dt = x[,"age",-1] - x[,"age",-dim(x)[3]]
+print(dim(x))
+print(dim(y))
+```
+
+Now let's do the default fit
+```{r}
+sf0 = FitSF(y=y,x=x,dt=dt)
+```
+
+
+We want to fit using FitSF.lm, so we specific that in the FitFun argument
+```{r}
+#the default is FitFun = FitMoments.SF
+sf = FitSF(y=y,x=x,dt=dt,FitFun=FitLM.SF)
+```
+
+The primary parameters of the model are an interaction network and equilibrium positions for each variable.
+```{r}
+print("Networks:")
+print(round(sf0$W,3))
+print(round(sf$W,3))
+```
+
+```{r}
+print("equlibrium position parameters:")
+print(round(sf0$lambda,3))
+print(round(sf$lambda,3))
+```
+
+The parameter estimators for W are basically identical...
+```{r}
+plot(c(sf0$W),c(sf$W),xlab="Default fitting algorithm (W)",ylab="Least-squares (W)")
+abline(0,1)
+```
+As are the equilibrium positions...
+```{r}
+plot(c(sf0$lambda),c(sf$lambda),xlab="Default fitting algorithm (lambda)",ylab="Least-squares (lambda)")
+abline(0,1)
+```
+
+As is the noise
+```{r}
+plot(c(sf0$sigma),c(sf$sigma),xlab="Default fitting algorithm (sigma)",ylab="Least-squares (sigma)")
+abline(0,1)
+```
+If the data are nice both estimators will give you identical results. If they data are not nice, you can get very different results.
