@@ -3042,7 +3042,7 @@ Preprocess = function(y,
       mu_sex[,nv] = mean(y[,nv,normIndex],na.rm=T)
       mu = array(mean(y[,nv,normIndex],na.rm=T),dim=c(nrow(ypp),ncol=dim(ypp)[3]))
       data_sd[nv] = sd(y[,nv,normIndex],na.rm=T)
-      ypp[,nv,] = (ypp[,nv,]-data_mu[nv])/data_sd[nv]
+      ypp[,nv,] = (ypp[,nv,]-mu)/data_sd[nv] #fixed, July 9 2024
     }
   }
   
