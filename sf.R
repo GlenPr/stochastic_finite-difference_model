@@ -743,7 +743,7 @@ BootSF = function(y, #data... 3d array individuals x var x times
       {
         ysave = ytrainimp
         ytrainimp = fit$ImputeEMFun(y=ytrainimp,x=xtrain,dt=dttrain,where=wheretrain,W=fit$W,lambda=fit$lambda,
-                                    Q=fit$Q,options=fit$imputeEMFunOptions)[["imp"]]
+                                    Q=fit$Q,sigma0=fit$sigma,options=fit$imputeEMFunOptions)[["imp"]] #update: July 2024 added sigma here (otherwise fails to invert if Npc < ncol)
         ytrainimp[is.na(ytrainimp)] = ysave[is.na(ytrainimp)]
         rm(ysave)
       }
@@ -755,7 +755,7 @@ BootSF = function(y, #data... 3d array individuals x var x times
       {
         ysave = ytestimp
         ytestimp = fit$ImputeEMFun(y=ytestimp,x=xtest,dt=dttest,where=wheretest,W=fit$W,lambda=fit$lambda,
-                                   Q=fit$Q,options=fit$imputeEMFunOptions)[["imp"]]
+                                   Q=fit$Q,sigma0=fit$sigma,options=fit$imputeEMFunOptions)[["imp"]] #update: July 2024 added sigma here (otherwise fails to invert if Npc < ncol)
         ytestimp[is.na(ytestimp)] = ysave[is.na(ytestimp)]
         rm(ysave)
       }
