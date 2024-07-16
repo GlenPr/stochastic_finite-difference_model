@@ -95,3 +95,6 @@ Pridham, G., Tennankore, K. K., Rockwood, K., Worthen, G. & Rutenberg, A. D. Sys
   primaryClass  = "q-bio.QM",
   arxivid       = "2405.20523"
 }
+
+# **Notes**
+-If you use Reshape() with an id column that can't be coerced into numeric, it will crash. I'll remove this in the future.
