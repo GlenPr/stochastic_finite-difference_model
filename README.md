@@ -99,3 +99,4 @@ Pridham, G., Tennankore, K. K., Rockwood, K., Worthen, G. & Rutenberg, A. D. Sys
 # **Notes**
 -If you use Reshape() with an id column that can't be coerced into numeric, it will crash. I'll remove this in the future.
 -If you use Reshape() with character sex it will fail to perform sex-specific normalization. In this case you should binarize sex or, (i) set sexSpecific=FALSE or (ii) set preprocess=FALSE.
+-namespace issues might also crop up (for me it's Impute), you can always add a post hoc wrapper for this or just load the package last.
