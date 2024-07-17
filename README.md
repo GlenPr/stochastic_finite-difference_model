@@ -96,7 +96,8 @@ Pridham, G., Tennankore, K. K., Rockwood, K., Worthen, G. & Rutenberg, A. D. Sys
   arxivid       = "2405.20523"
 }
 
-# **Notes**
+# **Common errors**
+-Individuals are sorted by their age, so make sure age captures changes in time e.g. if you measure someone at age 20 then 3 months later then the followup age should be 20.25 (NOT 20!)
 -If you use Reshape() with an id column that can't be coerced into numeric, it will crash. I'll remove this in the future.
 -If you use Reshape() with character sex it will fail to perform sex-specific normalization. In this case you should binarize sex or, (i) set sexSpecific=FALSE or (ii) set preprocess=FALSE.
 -namespace issues might also crop up (for me it's Impute), you can always add a post hoc wrapper for this or just load the package last.
