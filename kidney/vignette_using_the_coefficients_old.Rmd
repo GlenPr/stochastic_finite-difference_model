@@ -5,8 +5,7 @@ output: html_notebook
 
 Glen Pridham 2024.
 
-This file describes how to convert a set of biomarkers into natural variables.
-
+This file describes how to convert a set of biomarkers into natural variables. This file does not consider sex-specific effects, and as a result is not completely accurate (e.g. R2 reaches its max of .97 for z1, rather than 1). The errors are small so I'm keeping this file, but you should use the sex-specific one.
 
 
 
@@ -31,11 +30,6 @@ There are three cases discussed here:
 2. you have a subset of the 14,
 3. you have a subset of the 6 validation set (creatinine, albumin, urea, phosphate, calcium, total_co2).
 
-Note that the approximation files are sex-stratified. The older version uses the non-sex stratified which are a little less accurate. (applies to cases 2 and 3).
-
-FAQ
--Q. I can't find the z03 file, where is it? A. There is no z03, only the imaginary part of z02, imz02. The same applies to z07, which is usurped by imz06. (z02/z03 and z06/z07 were complex conjugates, this way we capture non-redundant information while still being real.)
-
 
 put the location of your files here (i.e. where the coefficients are saved)
 ```{r}
@@ -45,7 +39,6 @@ fileDir = "results" # put your file directory name here e.g. C:/glen/results
 #########################################################
 ########## Case 1 - you have all 14 biomarkers ########## 
 #########################################################
-confirmed to work
 
 First you'll need to load in your data. I'll just generate some fake (unrealistic) data.
 ```{r}
@@ -122,7 +115,6 @@ You now have all of the natural variables used in the paper.
 #################################################################
 ########## Case 2 - you have SOME of the 14 biomarkers ########## 
 #################################################################
-confirmed
 
 First you'll need to load in your data. I'll generate some (limited) fake data.
 ```{r}
@@ -131,10 +123,10 @@ data = data.frame(albumin=rnorm(100),pre_creatinine=rnorm(100),platelets=rnorm(1
 print(head(data))
 ```
 
-Let's look at the emulator coefficients, for example z01 for males
+Let's look at the emulator coefficients, for example z01
 ```{r}
 
-C1 = read.csv(sprintf("%s/kidney_emulator_male_models_z01_coefficients.csv",fileDir))
+C1 = read.csv(sprintf("%s/kidney_emulator_models_z01_coefficients.csv",fileDir))
 
 print(C1)
 ```
@@ -157,7 +149,6 @@ That's it. Now you repeat for all 14 zs. Note that z3 = Im(z2) and z7 = Im(z6), 
 ###########################################################################
 ########## Case 3 - you have some of the 6 validation biomarkers ########## 
 ###########################################################################
-confirmed
 
 In some cases your biomarker set might better align with the  validation set, which are:
 creatinine, albumin, urea, phosphate, calcium, and total_co2.
@@ -171,10 +162,10 @@ data = data.frame(albumin=rnorm(100),pre_creatinine=rnorm(100),pre_urea=rnorm(10
 print(head(data))
 ```
 
-Let's look at the emulator coefficients, for example z01 for females
+Let's look at the emulator coefficients, for example z01
 ```{r}
 
-C1 = read.csv(sprintf("%s/kidney_emulator_female_models_z01_coefficients.csv",fileDir))
+C1 = read.csv(sprintf("%s/kidney_emulator_models_z01_coefficients.csv",fileDir))
 
 print(C1)
 ```
